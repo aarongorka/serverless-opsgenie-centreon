@@ -27,7 +27,7 @@ def get_login(url, useralias, password):
             'submitLogin': 'Connect',
             'centreon_token': token}
     r = requests.post(url + 'index.php', data=data, cookies=jar, timeout=5)
-    logging.debug(json.dumps({'cookies': jar}))
+    logging.debug(json.dumps({'cookies': str(jar)}))
     if useralias not in r.text:
         raise Exception("Failed to log in.")
     else:
