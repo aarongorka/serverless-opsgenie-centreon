@@ -122,14 +122,14 @@ def handler(event, context):
         action = json.loads(event['Records'][0]['Sns']['Message'])['action']
         logging.info(json.dumps({'sns_action': action}))
     except Exception as e:
-        logging.critical(json.dumps({'action': 'extract action', 'status': 'failed', 'error': e}))
+        logging.critical(json.dumps({'action': 'extract action', 'status': 'failed', 'error': str(e)}))
 
     message = ""
     try:
         message = json.loads(event['Records'][0]['Sns']['Message'])[
             'alert']['message']
     except Exception as e:
-        logging.critical(json.dumps({'action': 'extract message', 'status': 'failed', 'error': e}))
+        logging.critical(json.dumps({'action': 'extract message', 'status': 'failed', 'error': str(e)}))
 
     host = ""
     service = ""
@@ -140,13 +140,13 @@ def handler(event, context):
             logging.debug('host: {host}, service: {service}'.format(
                 host=host, service=service))
         except Exception as e:
-            logging.critical(json.dumps({'action': 'extract service', 'status': 'failed', 'error': e}))
+            logging.critical(json.dumps({'action': 'extract service', 'status': 'failed', 'error': str(e)}))
     else:
         try:
             host = re.search('Centreon: (.*) is', message).group(1)
             logging.debug('host: {host}'.format(host=host))
         except Exception as e:
-            logging.critical(json.dumps({'action': 'extract host', 'status': 'failed', 'error': e}))
+            logging.critical(json.dumps({'action': 'extract host', 'status': 'failed', 'error': str(e)}))
 
     if action in ['Close', 'Acknowledge']:
         logging.info(json.dumps({'action': 'submitting acknowledgement'}))
@@ -155,7 +155,7 @@ def handler(event, context):
                 jar = get_login(url, useralias, password)
                 ack_service(jar, url, service, host, useralias)
             except Exception as e:
-                logging.critical(json.dumps({'action': 'submit service acknowedgement', 'status': 'failed', 'error': e, 'host': host, 'service': service}))
+                logging.critical(json.dumps({'action': 'submit service acknowedgement', 'status': 'failed', 'error': str(e), 'host': host, 'service': service}))
                 return {
                     "statusCode": 503,
                     "body": 'Failed to submit service acknowledgement: {}'.format(e)
@@ -165,7 +165,7 @@ def handler(event, context):
                 jar = get_login(url, useralias, password)
                 ack_host(jar, url, host, useralias)
             except Exception as e:
-                logging.critical(json.dumps({'action': 'submit service acknowedgement', 'status': 'failed', 'error': e, 'host': host}))
+                logging.critical(json.dumps({'action': 'submit service acknowedgement', 'status': 'failed', 'error': str(e), 'host': host}))
                 return {
                     "statusCode": 503,
                     "body": 'Failed to submit host acknowledgement: {}'.format(e)
