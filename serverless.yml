@@ -47,7 +47,7 @@ functions:
       CENTREON_URL: ${env:CENTREON_URL}
       CENTREON_USERALIAS: ${env:CENTREON_USERALIAS}
       CENTREON_PASSWORD: ${env:CENTREON_PASSWORD}
-  test_connectivity:
+  testconnectivity:
     handler: lambda.test_connectivity
     environment:
       CENTREON_URL: ${env:CENTREON_URL}
