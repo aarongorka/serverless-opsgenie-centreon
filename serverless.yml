@@ -1,9 +1,12 @@
 plugins:
   - serverless-python-requirements
+  - serverless-log-forwarding
 
 custom:
   pythonRequirements:
     dockerizePip: false
+  logForwarding:
+    destinationARN: {"Fn::ImportValue": "${env:SUMOLOGIC_LAMBDA_ARN_EXPORT_NAME}"}
 
 service: MV-opsgenie-centreon
 
@@ -14,6 +17,8 @@ provider:
   memory: 128
   region: ${env:AWS_REGION}
   variableSyntax: "\\${(?!AWS::)(env:[ :a-zA-Z0-9._,\\-\\/\\(\\)]+?)}"
+  stackTags:
+    FRAMEWORK: serverless
   vpc:
     securityGroupIds:
       - "${env:AWS_SG}"
