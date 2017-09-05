@@ -36,7 +36,7 @@ def get_login(url, useralias, password):
 
 
 def logout(url, jar):
-    r = requests(url + 'index.php?disconnect=1', timeout=5)
+    r = requests.get(url + 'index.php?disconnect=1', timeout=5)
     logging.info(json.dumps({'action': 'logged out'}))
 
 
