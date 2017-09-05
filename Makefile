@@ -10,12 +10,13 @@ ifdef AWS_ROLE
 	ASSUME_REQUIRED?=assumeRole
 endif
 
+
 ################
 # Entry Points #
 ################
 
 build: $(DOTENV_TARGET)
-	docker-compose run --rm serverless make _deps _testUnit _build
+	docker-compose run --rm serverless make test _deps _build
 
 deploy: $(ARTIFACT_PATH) .env $(ASSUME_REQUIRED)
 	docker-compose run --rm serverless make _deps _deploy
@@ -33,7 +34,8 @@ test: *.py
 	docker-compose run --rm pep8 --ignore E501 *.py
 
 assumeRole: .env
-#	docker run --rm -e "AWS_ACCOUNT_ID" -e "AWS_ROLE" amaysim/aws:1.1.1 assume-role.sh >> .env
+	docker run --rm -e "AWS_ACCOUNT_ID" -e "AWS_ROLE" amaysim/aws:1.1.1 assume-role.sh >> .env
+.PHONY: build deploy smoketest remove shell test assumeRole
 
 ##########
 # Others #
@@ -78,3 +80,4 @@ _remove:
 
 _clean:
 	rm -fr node_modules .serverless package .requirements
+.PHONY: _deploy _remove _clean
