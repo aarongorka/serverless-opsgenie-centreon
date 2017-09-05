@@ -24,6 +24,11 @@ provider:
       - "${env:AWS_SG}"
     subnetIds:
       - "${env:AWS_SUBNET_A}"
+  environment:
+    CENTREON_URL: ${env:CENTREON_URL}
+    CENTREON_USERALIAS: ${env:CENTREON_USERALIAS}
+    CENTREON_PASSWORD: ${env:CENTREON_PASSWORD}
+    ENV: ${env:ENV}
 
 package:
   exclude:
@@ -43,16 +48,8 @@ functions:
     handler: lambda.handler
     events:
       - sns: MV-opsgenie-centreon-acknowledge-${env:ENV}
-    environment:
-      CENTREON_URL: ${env:CENTREON_URL}
-      CENTREON_USERALIAS: ${env:CENTREON_USERALIAS}
-      CENTREON_PASSWORD: ${env:CENTREON_PASSWORD}
   testconnectivity:
     handler: lambda.test_connectivity
-    environment:
-      CENTREON_URL: ${env:CENTREON_URL}
-      CENTREON_USERALIAS: ${env:CENTREON_USERALIAS}
-      CENTREON_PASSWORD: ${env:CENTREON_PASSWORD}
 
 resources:
   Resources:
