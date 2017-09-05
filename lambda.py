@@ -105,7 +105,11 @@ def ack_host(jar, url, host, useralias):
 
 def handler(event, context):
     loglevel = os.environ.get('LOGLEVEL', 'INFO')
-    aws_lambda_logging.setup(level=loglevel)
+    aws_lambda_logging.setup(level=loglevel, aws_request_id=context.get('aws_request_id')))
+    try:
+        aws_lambda_logging.setup(env=os.environ.get('ENV'))
+    except:
+        pass
     logging.debug(json.dumps({'event': event}))
     try:
         logging.info(json.dumps({'sns': event['Records'][0]['Sns']['Message']}))
@@ -138,12 +142,14 @@ def handler(event, context):
             service = re.search('Centreon: .*/(.*) is', message).group(1)
             logging.debug('host: {host}, service: {service}'.format(
                 host=host, service=service))
+            aws_lambda_logging.setup(service=service, host=host)
         except Exception as e:
             logging.critical(json.dumps({'action': 'extract service', 'status': 'failed', 'error': str(e)}))
     else:
         try:
             host = re.search('Centreon: (.*) is', message).group(1)
             logging.debug('host: {host}'.format(host=host))
+            aws_lambda_logging.setup(host=host)
         except Exception as e:
             logging.critical(json.dumps({'action': 'extract host', 'status': 'failed', 'error': str(e)}))
 
