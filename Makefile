@@ -21,7 +21,7 @@ deploy: $(ARTIFACT_PATH) .env $(ASSUME_REQUIRED)
 	docker-compose run --rm serverless make _deps _deploy
 
 smoketest: .env $(ASSUME_REQUIRED)
-	docker-compose run --rm serverless make _smoketest
+	docker-compose run --rm serverless make _smokeTest
 
 remove: $(DOTENV_TARGET)
 	docker-compose run --rm serverless make _deps _remove
@@ -64,7 +64,7 @@ node_modules: package.json
 	yarn --no-bin-links
 
 _smokeTest:
-	sls invoke -f testconnection
+	sls invoke -f testconnectivity
 
 _build:
 
