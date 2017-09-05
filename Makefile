@@ -20,6 +20,9 @@ build: $(DOTENV_TARGET)
 deploy: $(ARTIFACT_PATH) .env $(ASSUME_REQUIRED)
 	docker-compose run --rm serverless make _deps _deploy
 
+smoketest: .env $(ASSUME_REQUIRED)
+	docker-compose run --rm serverless make _smoketest
+
 remove: $(DOTENV_TARGET)
 	docker-compose run --rm serverless make _deps _remove
 
@@ -60,8 +63,8 @@ node_modules: package.json
 	# work around due to https://github.com/yarnpkg/yarn/issues/1961
 	yarn --no-bin-links
 
-_testUnit:
-
+_smokeTest:
+	sls invoke -f testconnection
 
 _build:
 
