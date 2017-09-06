@@ -16,7 +16,7 @@ endif
 ################
 
 build: $(DOTENV_TARGET)
-	docker-compose run --rm serverless make test _deps _build
+	docker-compose run --rm serverless make _deps _build
 
 deploy: $(ARTIFACT_PATH) .env $(ASSUME_REQUIRED)
 	docker-compose run --rm serverless make _deps _deploy
