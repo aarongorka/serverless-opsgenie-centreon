@@ -9,6 +9,9 @@ endif
 ifdef AWS_ROLE
 	ASSUME_REQUIRED?=assumeRole
 endif
+ifdef GO_PIPELINE_NAME
+	ENV_RM_REQUIRED?=rm_env
+endif
 
 
 ################
@@ -18,7 +21,7 @@ endif
 build: $(DOTENV_TARGET)
 	docker-compose run --rm serverless make _deps _build
 
-deploy: $(ARTIFACT_PATH) .env $(ASSUME_REQUIRED)
+deploy: $(ENV_RM_REQUIRED) $(ARTIFACT_PATH) .env $(ASSUME_REQUIRED)
 	docker-compose run --rm serverless make _deps _deploy
 
 smoketest: .env $(ASSUME_REQUIRED)
@@ -40,6 +43,11 @@ assumeRole: .env
 ##########
 # Others #
 ##########
+
+# Removes the .env file before each deploy to force regeneration without cleaning the whole environment
+rm_env:
+	rm -f .env
+.PHONY: rm_env
 
 # Create .env based on .env.template if .env does not exist
 .env:
