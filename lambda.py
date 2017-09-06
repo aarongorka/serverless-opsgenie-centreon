@@ -106,7 +106,7 @@ def ack_host(jar, url, host, useralias, correlation_id):
 
 def handler(event, context):
     loglevel = os.environ.get('LOGLEVEL', 'INFO')
-    aws_lambda_logging.setup(level=loglevel, correlation_id=context.get('aws_request_id'))
+    aws_lambda_logging.setup(level=loglevel, correlation_id=context.aws_request_id)
     try:
         aws_lambda_logging.setup(env=os.environ.get('ENV'))
     except:
@@ -199,7 +199,7 @@ def local_test():
 
 def test_connectivity(event, context):
     loglevel = os.environ.get('LOGLEVEL', 'DEBUG')
-    aws_lambda_logging.setup(level=loglevel, correlation_id=context.get('aws_request_id'))
+    aws_lambda_logging.setup(level=loglevel, correlation_id=context.aws_request_id)
     try:
         aws_lambda_logging.setup(env=os.environ.get('ENV'))
     except:
