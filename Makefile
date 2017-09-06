@@ -33,7 +33,7 @@ remove: $(DOTENV_TARGET)
 shell: $(DOTENV_TARGET)
 	docker-compose run --rm serverless bash
 
-test: *.py
+test: *.py .env
 	docker-compose run --rm pep8 --ignore E501 *.py
 
 assumeRole: .env
