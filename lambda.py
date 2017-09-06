@@ -16,7 +16,7 @@ def get_token(text):
             return input['value']
 
 
-def get_login(url, useralias, password):
+def get_login(url, useralias, password, correlation_id):
     r = requests.get(url + 'index.php', timeout=5)
     token = get_token(r.text)
     jar = r.cookies
@@ -25,7 +25,7 @@ def get_login(url, useralias, password):
             'password': password,
             'submitLogin': 'Connect',
             'centreon_token': token}
-    r = requests.post(url + 'index.php', data=data, cookies=jar, timeout=5)
+    r = requests.post(url + 'index.php', data=data, cookies=jar, timeout=5, headers={'Correlation-Id': correlation_id})
     logging.debug(json.dumps({'cookies': str(jar)}))
     if useralias not in r.text:
         raise Exception("Failed to log in.")
@@ -34,15 +34,15 @@ def get_login(url, useralias, password):
     return jar
 
 
-def logout(url, jar):
-    requests.get(url + 'index.php?disconnect=1', timeout=5)
+def logout(url, jar, correlation_id):
+    requests.get(url + 'index.php?disconnect=1', timeout=5, headers={'Correlation-Id': correlation_id})
     logging.info(json.dumps({'action': 'logged out'}))
 
 
-def ack_service(jar, url, service, host, useralias):
+def ack_service(jar, url, service, host, useralias, correlation_id):
     fullurl = '{url}main.php?p=20201&o=svcak&cmd=15&host_name={host}&service_description={service}&en=1'.format(
         url=url, host=host, service=service)
-    r = requests.get(fullurl, cookies=jar, timeout=5)
+    r = requests.get(fullurl, cookies=jar, timeout=5, headers={'Correlation-Id': correlation_id})
     logging.debug(json.dumps(r.text))
 
     token = get_token(r.text)
@@ -63,19 +63,20 @@ def ack_service(jar, url, service, host, useralias):
             'o': 'svcd'}
 
     logging.debug(json.dumps({"action": "post", "data": data}))
-    logging.info(json.dumps({"action": "acknowledgement", "host": host, "service": service}))
+    logging.info(json.dumps({"action": "acknowledgement"}))
     r = requests.post(
         '{url}main.php?p=20201&host_name={host}&service_description={service}'.format(
-            url=url, host=host, service=service), data=data, cookies=jar, timeout=5)
+            url=url, host=host, service=service), data=data, cookies=jar, timeout=5, headers={'Correlation-Id': correlation_id})
+
     if useralias not in r.text:
         raise Exception("Failed to log in.")
     return(r)
 
 
-def ack_host(jar, url, host, useralias):
+def ack_host(jar, url, host, useralias, correlation_id):
     r = requests.get(
         '{url}main.php?p=20202&o=hak&cmd=14&host_name={host}&en=1'.format(
-            url=url, host=host), cookies=jar, timeout=5)
+            url=url, host=host), cookies=jar, timeout=5, headers={'Correlation-Id': correlation_id})
     logging.debug(json.dumps({'text': r.text}))
 
     token = get_token(r.text)
@@ -99,13 +100,13 @@ def ack_host(jar, url, host, useralias):
     logging.info(json.dumps({"action": "acknowledgement", "host": host}))
     r = requests.post(
         '{url}main.php?p=20202&host_name={host}'.format(
-            url=url, host=host), data=data, cookies=jar, timeout=5)
+            url=url, host=host), data=data, cookies=jar, timeout=5, headers={'Correlation-Id': correlation_id})
     return(r)
 
 
 def handler(event, context):
     loglevel = os.environ.get('LOGLEVEL', 'INFO')
-    aws_lambda_logging.setup(level=loglevel, aws_request_id=context.get('aws_request_id')))
+    aws_lambda_logging.setup(level=loglevel, correlation_id=context.get('aws_request_id'))
     try:
         aws_lambda_logging.setup(env=os.environ.get('ENV'))
     except:
@@ -157,20 +158,20 @@ def handler(event, context):
         logging.info(json.dumps({'action': 'submitting acknowledgement'}))
         if service:
             try:
-                jar = get_login(url, useralias, password)
-                ack_service(jar, url, service, host, useralias)
+                jar = get_login(url, useralias, password, correlation_id)
+                ack_service(jar, url, service, host, useralias, correlation_id)
             except Exception as e:
-                logging.critical(json.dumps({'action': 'submit service acknowedgement', 'status': 'failed', 'error': str(e), 'host': host, 'service': service}))
+                logging.critical(json.dumps({'action': 'submit service acknowedgement', 'status': 'failed', 'error': str(e)}))
                 return {
                     "statusCode": 503,
                     "body": 'Failed to submit service acknowledgement: {}'.format(e)
                 }
         else:
             try:
-                jar = get_login(url, useralias, password)
-                ack_host(jar, url, host, useralias)
+                jar = get_login(url, useralias, password, correlation_id)
+                ack_host(jar, url, host, useralias, correlation_id)
             except Exception as e:
-                logging.critical(json.dumps({'action': 'submit service acknowedgement', 'status': 'failed', 'error': str(e), 'host': host}))
+                logging.critical(json.dumps({'action': 'submit service acknowedgement', 'status': 'failed', 'error': str(e)}))
                 return {
                     "statusCode": 503,
                     "body": 'Failed to submit host acknowledgement: {}'.format(e)
@@ -191,19 +192,23 @@ def local_test():
     password = os.environ['CENTREON_PASSWORD']
     service = 'testservice'
     host = 'testhost'
-    jar = get_login(url, useralias, password)
-    ack_service(jar, url, service, host, useralias)
-    ack_host(jar, url, host, useralias)
+    jar = get_login(url, useralias, password, correlation_id)
+    ack_service(jar, url, service, host, useralias, correlation_id)
+    ack_host(jar, url, host, useralias, correlation_id)
 
 
 def test_connectivity(event, context):
     loglevel = os.environ.get('LOGLEVEL', 'DEBUG')
-    aws_lambda_logging.setup(level=loglevel)
+    aws_lambda_logging.setup(level=loglevel, correlation_id=context.get('aws_request_id'))
+    try:
+        aws_lambda_logging.setup(env=os.environ.get('ENV'))
+    except:
+        pass
     logging.debug(json.dumps({'event': event}))
 
     url = os.environ['CENTREON_URL']
     useralias = os.environ['CENTREON_USERALIAS']
     password = os.environ['CENTREON_PASSWORD']
 
-    jar = get_login(url, useralias, password)
-    logout(url, jar)
+    jar = get_login(url, useralias, password, correlation_id)
+    logout(url, jar, correlation_id)
