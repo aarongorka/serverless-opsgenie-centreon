@@ -106,8 +106,9 @@ def ack_host(jar, url, host, useralias, correlation_id):
 
 def handler(event, context):
     loglevel = os.environ.get('LOGLEVEL', 'INFO')
-    aws_lambda_logging.setup(level=loglevel, correlation_id=correlation_id)  # for some reason you have to do setup first
     correlation_id = context.aws_request_id
+    aws_lambda_logging.setup(level=loglevel, correlation_id=correlation_id)  # for some reason you have to do setup twice
+    logging.debug('Initialising logging...')
     aws_lambda_logging.setup(level=loglevel, correlation_id=correlation_id)
     try:
         aws_lambda_logging.setup(env=os.environ.get('ENV'))
